@@ -1,0 +1,38 @@
+{
+  "method": "bge-m3",
+  "datasets": {
+    "opencoss": {
+      "pairs": 6786,
+      "conflicts": 10,
+      "average_precision": 0.3294,
+      "precision@10": 0.4,
+      "recall@2n": 0.5,
+      "rank_of_first_conflict": 2
+    },
+    "pure": {
+      "pairs": 2211,
+      "conflicts": 20,
+      "average_precision": 0.9126,
+      "precision@10": 1.0,
+      "recall@2n": 0.95,
+      "rank_of_first_conflict": 1
+    },
+    "uav": {
+      "pairs": 6556,
+      "conflicts": 18,
+      "average_precision": 0.9366,
+      "precision@10": 1.0,
+      "recall@2n": 1.0,
+      "rank_of_first_conflict": 1
+    },
+    "worldvista": {
+      "pairs": 10878,
+      "conflicts": 35,
+      "average_precision": 0.7094,
+      "precision@10": 1.0,
+      "recall@2n": 0.8286,
+      "rank_of_first_conflict": 1
+    }
+  },
+  "mean_average_precision": 0.722
+}
