@@ -26,6 +26,7 @@ dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "pandas-stubs"]
 lora = ["transformers>=4.51", "peft>=0.13"]
 ml = ["sentence-transformers>=3"]
 graph = ["neo4j>=5.20"]
+charts = ["matplotlib>=3.8"]
 
 [project.scripts]
 spec-review = "spec_review.cli:app"

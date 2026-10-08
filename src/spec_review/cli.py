@@ -363,6 +363,15 @@ def data_card() -> None:
 
 
 @app.command()
+def charts() -> None:
+    """Redraw the README charts (light and dark) from docs/results."""
+    from spec_review.eval import charts as charts_module
+
+    for path in charts_module.all_charts():
+        typer.echo(f"wrote {path}")
+
+
+@app.command()
 def version() -> None:
     """Print the package version."""
     typer.echo(__version__)
