@@ -27,3 +27,10 @@ def test_verdict_score_sign_follows_the_answer() -> None:
     out: dict[str, Any]
     out, _ = verify.verify(llm, "Book a visit", "use case", "class Visit", "code")
     assert out["score"] == -4
+
+
+def test_binary_rerank_ignores_confidence() -> None:
+    ranked = ["a", "b", "c", "d"]
+    scores = {"a": -1.0, "b": -5.0, "c": 4.0, "d": 5.0}
+    assert verify.rerank(ranked, scores, k=4) == ["d", "c", "a", "b"]
+    assert verify.rerank(ranked, scores, k=4, binary=True) == ["c", "d", "a", "b"]
