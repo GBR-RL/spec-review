@@ -24,6 +24,8 @@ dependencies = [
 dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "pandas-stubs"]
 # torch comes from the CPU wheel index: pip install torch --index-url https://download.pytorch.org/whl/cpu
 lora = ["transformers>=4.51", "peft>=0.13"]
+ml = ["sentence-transformers>=3"]
+graph = ["neo4j>=5.20"]
 
 [project.scripts]
 spec-review = "spec_review.cli:app"

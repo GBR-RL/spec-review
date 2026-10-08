@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
@@ -73,6 +73,48 @@ def classify(
             typer.echo(
                 f"{t:7s} {r['method']:24s} macro-F1 {r['macro_f1']:.3f} [{lo:.3f}, {hi:.3f}]"
             )
+
+
+@app.command("trace-eval")
+def trace_eval(
+    method: str = typer.Option("all", help="tfidf, e5-small, bge-m3, hybrid or all"),
+) -> None:
+    """Recover trace links on the CoEST pairs and score the rankings (MAP, recall@k)."""
+    from spec_review.trace import recover as r
+
+    dense = {m: r.dense(m) for m in r.DENSE_MODELS}
+    methods = {"tfidf": r.tfidf, **dense, "hybrid": r.hybrid(r.tfidf, dense["bge-m3"])}
+    for name, fn in methods.items():
+        if method in ("all", name):
+            out = r.evaluate(name, fn)
+            typer.echo(f"{name:10s} mean MAP {out['mean_map']:.3f}")
+
+
+@app.command()
+def impact(
+    method: str = typer.Option("hybrid", help="Recovery method whose rankings build the graph."),
+    k: int = typer.Option(3, help="Top candidates per source kept as predicted links."),
+    hops: int = typer.Option(3),
+) -> None:
+    """Impact analysis on EasyClinic: predicted impact sets against the true ones."""
+    import json
+
+    from spec_review.data import coest
+    from spec_review.trace import graph as g
+    from spec_review.trace.recover import RESULTS
+
+    arts, _ = coest.load()
+    starts = arts[(arts.dataset == "EasyClinic") & (arts.kind == "use case")].id.tolist()
+    gold = g.Graph(g.gold_edges("EasyClinic"))
+    by_k: dict[str, dict[str, Any]] = {}
+    for top in sorted({1, 2, 3, 5, k}):
+        pred = g.Graph(g.predicted_edges(method, "EasyClinic", top))
+        s = by_k[str(top)] = g.impact_scores(gold, pred, starts, hops)
+        sizes = f"true {s['mean_true_impact']:.1f}, predicted {s['mean_predicted_impact']:.1f}"
+        typer.echo(f"top-{top}: precision {s['precision']:.3f} recall {s['recall']:.3f} ({sizes})")
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    report = {"method": method, "hops": hops, "by_k": by_k}
+    (RESULTS / f"impact_{method}.json").write_text(json.dumps(report, indent=2) + "\n")
 
 
 @app.command("lora-train")
