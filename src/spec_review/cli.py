@@ -113,7 +113,7 @@ def classify_score(
 
 @app.command("llm-run")
 def llm_run(
-    task: str = typer.Option(..., help="pronoun, review or classify"),
+    task: str = typer.Option(..., help="pronoun, pronoun-candidates, review or classify"),
     model: str = typer.Option("qwen3.5-4b"),
     name: str = typer.Option("", help="Run name (default: task-model)."),
     shard: int = typer.Option(0),
@@ -125,8 +125,8 @@ def llm_run(
 
     llm = LLM(model)
     run = name or f"{task}-{model}"
-    if task == "pronoun":
-        path = runs.pronoun_run(llm, run, shard, shards)
+    if task in ("pronoun", "pronoun-candidates"):
+        path = runs.pronoun_run(llm, run, shard, shards, candidates=task != "pronoun")
     elif task == "review":
         path = runs.review_run(llm, run, shard, shards)
     elif task == "classify":

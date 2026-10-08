@@ -62,3 +62,13 @@ def test_scores_for_a_constant_prediction() -> None:
     s = quality._scores(y, np.ones_like(y))
     assert s["accuracy"] == 0.5
     assert s["cohen_kappa"] == 0.0
+
+
+def test_candidates_make_a_pronoun_ambiguous() -> None:
+    reply = {"candidates": ["the pump", "The Pump ", "the valve"], "chosen": "the pump"}
+    out, _ = reviewer.pronoun_candidates(_llm(reply, []), "x <referential>it</referential>")
+    assert out["ambiguous"] is True
+    one = {"candidates": ["the pump", "the  pump"], "chosen": "the pump"}
+    out, _ = reviewer.pronoun_candidates(_llm(one, []), "x <referential>it</referential>")
+    assert out["ambiguous"] is False
+    assert out["antecedent"] == "the pump"

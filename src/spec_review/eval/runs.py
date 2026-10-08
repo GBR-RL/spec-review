@@ -74,12 +74,15 @@ def merge(name: str) -> pd.DataFrame:
     return df
 
 
-def pronoun_run(llm: LLM, name: str, index: int = 0, count: int = 1) -> Path:
+def pronoun_run(
+    llm: LLM, name: str, index: int = 0, count: int = 1, candidates: bool = False
+) -> Path:
     """Every ReqEval sentence: nothing is trained on them, so all 212 are scored."""
     df = reqeval.load()
+    judge = reviewer.pronoun_candidates if candidates else reviewer.pronoun
 
     def fn(r: dict[str, Any]) -> dict[str, Any]:
-        out, c = reviewer.pronoun(llm, r["marked"])
+        out, c = judge(llm, r["marked"])
         return {**out, **_usage(c)}
 
     path = run_dir(name) / f"shard{index}of{count}.jsonl"

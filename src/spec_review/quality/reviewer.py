@@ -27,6 +27,13 @@ careful reader could reasonably link it to more than one noun phrase in the requ
 - antecedent: the noun phrase you think it refers to, copied from the requirement.
 - reason: one short sentence."""
 
+CANDIDATES_SYSTEM = """You review software and system requirements for ambiguity.
+
+A pronoun in the requirement is marked with <referential>...</referential>. List every noun
+phrase in the requirement that a careful reader could take it to refer to: it must agree with
+the pronoun in number and make sense in the sentence. Include a candidate even if you think it
+is less likely. Then say which one you would pick."""
+
 REVIEW_SYSTEM = """You review engineering requirements against the INCOSE Guide to Writing
 Requirements and ISO/IEC/IEEE 29148. A good requirement is one verifiable statement, uses
 "shall", names its subject, and contains no vague, open-ended or undecided wording.
@@ -42,6 +49,11 @@ class PronounVerdict(BaseModel):
     ambiguous: bool
     antecedent: str = Field(max_length=200)
     reason: str = Field(max_length=300)
+
+
+class Candidates(BaseModel):
+    candidates: list[str] = Field(max_length=6)
+    chosen: str = Field(max_length=200)
 
 
 class Issue(BaseModel):
@@ -65,6 +77,20 @@ def pronoun(llm: LLM, marked: str) -> tuple[dict[str, Any], Completion]:
     ]
     parsed, c = llm.parse(msgs, PronounVerdict, max_tokens=200)
     out: dict[str, Any] = json.loads(parsed.model_dump_json())
+    return out, c
+
+
+def pronoun_candidates(llm: LLM, marked: str) -> tuple[dict[str, Any], Completion]:
+    """Ambiguous when the model lists two or more plausible antecedents."""
+    msgs = [
+        {"role": "system", "content": CANDIDATES_SYSTEM},
+        {"role": "user", "content": f"Requirement:\n{marked}"},
+    ]
+    parsed, c = llm.parse(msgs, Candidates, max_tokens=250)
+    out: dict[str, Any] = json.loads(parsed.model_dump_json())
+    distinct = {" ".join(x.lower().split()) for x in out["candidates"] if x.strip()}
+    out["ambiguous"] = len(distinct) >= 2
+    out["antecedent"] = out["chosen"]
     return out, c
 
 
