@@ -84,7 +84,7 @@ def render(files: dict[Path, list[Requirement]]) -> str:
                 f"</span></td><td>{_highlight(r)}</td><td>{verdict}</td></tr>"
             )
         sections.append(
-            f"<h2>{html.escape(str(path))}</h2><table><tr><th>ID</th><th>Requirement</th>"
+            f"<h2>{html.escape(path.as_posix())}</h2><table><tr><th>ID</th><th>Requirement</th>"
             f"<th>Findings</th></tr>{''.join(rows)}</table>"
         )
     return (
