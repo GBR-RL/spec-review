@@ -1,0 +1,25 @@
+{
+  "task": "fr-nfr",
+  "method": "tfidf_svm_random-folds",
+  "folds": "random (projects shared)",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.8981,
+  "macro_f1_ci": [
+    0.8783,
+    0.9178
+  ],
+  "weighted_f1": 0.8988,
+  "accuracy": 0.8989,
+  "macro_f1_per_fold": [
+    0.9017,
+    0.8909,
+    0.8956,
+    0.8905,
+    0.9115
+  ],
+  "f1_per_class": {
+    "F": 0.8891,
+    "NFR": 0.907
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "task": "all-12",
+  "method": "tfidf_svm",
+  "folds": "grouped by project",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.5315,
+  "macro_f1_ci": [
+    0.4708,
+    0.5819
+  ],
+  "weighted_f1": 0.6622,
+  "accuracy": 0.6636,
+  "macro_f1_per_fold": [
+    0.4958,
+    0.5925,
+    0.4923,
+    0.5186,
+    0.5657
+  ],
+  "f1_per_class": {
+    "A": 0.6462,
+    "F": 0.7843,
+    "FT": 0.3333,
+    "L": 0.5455,
+    "LF": 0.4419,
+    "MN": 0.4167,
+    "O": 0.5091,
+    "PE": 0.623,
+    "PO": 0.3,
+    "SC": 0.5366,
+    "SE": 0.6445,
+    "US": 0.5965
+  }
+}
