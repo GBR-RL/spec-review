@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, roc_auc_score
 
 from spec_review.config import ROOT
 from spec_review.data import promise, reqeval
@@ -66,6 +66,25 @@ def _round(v: Any) -> Any:
     return v
 
 
+def _count(cands: Any) -> int:
+    return len({" ".join(str(x).lower().split()) for x in cands if str(x).strip()})
+
+
+def tuned_threshold(score: np.ndarray, y: np.ndarray, split: np.ndarray) -> dict[str, Any]:
+    """Pick "ambiguous if score >= t" on ReqEval's train split, report its test split."""
+    train, test = split == "train", split == "test"
+    best = max(
+        sorted(set(score[train].tolist())),
+        key=lambda t: cohen_kappa_score(y[train], score[train] >= t),
+    )
+    return {
+        "threshold_from_train": float(best),
+        "test_sentences": int(test.sum()),
+        "auc_all": float(roc_auc_score(y, score)),
+        "test": _scores(y[test], score[test] >= best),
+    }
+
+
 def pronoun_report(run: str) -> dict[str, Any]:
     gold = reqeval.load().set_index("id")
     df = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
@@ -78,11 +97,18 @@ def pronoun_report(run: str) -> dict[str, Any]:
         bool(_norm(a)) and (_norm(a) in _norm(p) or _norm(p) in _norm(a))
         for a, p in zip(g.antecedent[clear], ok.antecedent[clear], strict=True)
     ]
+    split = g.split.to_numpy()
+    nps = np.array([len(_NP.findall(m.split("<referential>", 1)[0])) for m in g.marked])
+    tuned: dict[str, Any] = {"noun_phrase_count": tuned_threshold(nps, y, split)}
+    if "candidates" in ok:
+        counts = np.array([_count(c) for c in ok.candidates])
+        tuned["llm_candidate_count"] = tuned_threshold(counts, y, split)
     return _write(
         run,
         {
             "run": run,
             "sentences": len(ok),
+            "thresholds_tuned_on_train": tuned,
             "errors": len(df) - len(ok),
             "base_rate_ambiguous": float(y.mean()),
             "llm": _scores(y, llm),
