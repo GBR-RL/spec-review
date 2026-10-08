@@ -1,0 +1,38 @@
+{
+  "method": "nli",
+  "datasets": {
+    "opencoss": {
+      "pairs": 6786,
+      "conflicts": 10,
+      "average_precision": 0.1008,
+      "precision@10": 0.1,
+      "recall@2n": 0.1,
+      "rank_of_first_conflict": 1
+    },
+    "pure": {
+      "pairs": 2211,
+      "conflicts": 20,
+      "average_precision": 0.0475,
+      "precision@10": 0.3,
+      "recall@2n": 0.15,
+      "rank_of_first_conflict": 5
+    },
+    "uav": {
+      "pairs": 6556,
+      "conflicts": 18,
+      "average_precision": 0.1157,
+      "precision@10": 0.3,
+      "recall@2n": 0.1667,
+      "rank_of_first_conflict": 1
+    },
+    "worldvista": {
+      "pairs": 10878,
+      "conflicts": 35,
+      "average_precision": 0.0255,
+      "precision@10": 0.2,
+      "recall@2n": 0.0857,
+      "rank_of_first_conflict": 4
+    }
+  },
+  "mean_average_precision": 0.0724
+}

@@ -1,0 +1,41 @@
+{
+  "method": "tfidf+llm-judge",
+  "run": "conflict-qwen3.5-4b",
+  "datasets": {
+    "opencoss": {
+      "pairs": 6786,
+      "conflicts": 10,
+      "average_precision": 0.2092,
+      "precision@10": 0.3,
+      "recall@2n": 0.4,
+      "rank_of_first_conflict": 4
+    },
+    "pure": {
+      "pairs": 2211,
+      "conflicts": 20,
+      "average_precision": 0.9285,
+      "precision@10": 0.9,
+      "recall@2n": 1.0,
+      "rank_of_first_conflict": 1
+    },
+    "uav": {
+      "pairs": 6556,
+      "conflicts": 18,
+      "average_precision": 0.9152,
+      "precision@10": 0.9,
+      "recall@2n": 1.0,
+      "rank_of_first_conflict": 1
+    },
+    "worldvista": {
+      "pairs": 10878,
+      "conflicts": 35,
+      "average_precision": 0.9003,
+      "precision@10": 1.0,
+      "recall@2n": 0.9429,
+      "rank_of_first_conflict": 1
+    }
+  },
+  "mean_average_precision": 0.7383,
+  "verdicts": 200,
+  "errors": 0
+}
