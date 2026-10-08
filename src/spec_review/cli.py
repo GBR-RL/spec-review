@@ -90,6 +90,50 @@ def trace_eval(
             typer.echo(f"{name:10s} mean MAP {out['mean_map']:.3f}")
 
 
+@app.command("trace-verify-score")
+def trace_verify_score(
+    run: str = typer.Option("trace-verify-qwen3.5-4b"),
+    method: str = typer.Option("hybrid"),
+) -> None:
+    """Re-rank the recovered candidates by the LLM verdicts and score them again."""
+    import json
+
+    import pandas as pd
+
+    from spec_review.config import RUNS
+    from spec_review.eval.runs import run_dir
+    from spec_review.trace import recover, verify
+
+    verdicts = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
+    ok = verdicts[verdicts.get("error", pd.Series(index=verdicts.index, dtype=object)).isna()]
+    rankings = json.loads((RUNS / "trace" / f"{method}_rankings.json").read_text())
+    scores: dict[str, dict[str, dict[str, float]]] = {}
+    for key, score in zip(ok.id, ok.score, strict=True):
+        pair, source, target = key.split("|")
+        scores.setdefault(pair, {}).setdefault(source, {})[target] = float(score)
+    out: dict[str, Any] = {"method": f"{method}+llm-verify", "run": run, "pairs": {}}
+    yes_right, yes_total = 0, 0
+    for pair in recover.PAIRS:
+        _, _, gold = recover.pair_data(pair)
+        reranked = {
+            s: verify.rerank(r, scores.get(pair.name, {}).get(s, {}))
+            for s, r in rankings.get(pair.name, {}).items()
+        }
+        out["pairs"][pair.name] = recover.score_rankings(reranked, gold)
+        for s, ts in scores.get(pair.name, {}).items():
+            for t, v in ts.items():
+                if v > 0:
+                    yes_total += 1
+                    yes_right += (s, t) in gold
+    out["mean_map"] = sum(p["map"] for p in out["pairs"].values()) / len(out["pairs"])
+    out["precision_of_yes"] = yes_right / max(1, yes_total)
+    out["verdicts"] = len(ok)
+    out["errors"] = len(verdicts) - len(ok)
+    path = recover.RESULTS / f"{method}_llm-verify.json"
+    path.write_text(json.dumps(recover._round(out), indent=2) + "\n")
+    typer.echo(f"mean MAP {out['mean_map']:.3f}, precision of yes {out['precision_of_yes']:.3f}")
+
+
 @app.command()
 def impact(
     method: str = typer.Option("hybrid", help="Recovery method whose rankings build the graph."),
@@ -155,7 +199,9 @@ def classify_score(
 
 @app.command("llm-run")
 def llm_run(
-    task: str = typer.Option(..., help="pronoun, pronoun-candidates, review or classify"),
+    task: str = typer.Option(
+        ..., help="pronoun, pronoun-candidates, review, classify or trace-verify"
+    ),
     model: str = typer.Option("qwen3.5-4b"),
     name: str = typer.Option("", help="Run name (default: task-model)."),
     shard: int = typer.Option(0),
@@ -173,6 +219,8 @@ def llm_run(
         path = runs.review_run(llm, run, shard, shards)
     elif task == "classify":
         path = runs.classify_run(llm, run, shard, shards)
+    elif task == "trace-verify":
+        path = runs.verify_run(llm, run, shard, shards)
     else:
         raise typer.BadParameter(f"unknown task {task!r}")
     typer.echo(f"wrote {path}")
