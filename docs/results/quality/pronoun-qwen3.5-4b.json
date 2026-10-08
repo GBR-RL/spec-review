@@ -1,0 +1,37 @@
+{
+  "run": "pronoun-qwen3.5-4b",
+  "sentences": 212,
+  "errors": 0,
+  "base_rate_ambiguous": 0.5377,
+  "llm": {
+    "accuracy": 0.5189,
+    "f1_ambiguous": 0.32,
+    "f1_ambiguous_ci": [
+      0.219,
+      0.4001
+    ],
+    "cohen_kappa": 0.0834,
+    "predicted_ambiguous": 0.1698
+  },
+  "always_ambiguous": {
+    "accuracy": 0.5377,
+    "f1_ambiguous": 0.6994,
+    "f1_ambiguous_ci": [
+      0.6367,
+      0.7493
+    ],
+    "cohen_kappa": 0.0,
+    "predicted_ambiguous": 1.0
+  },
+  "two_noun_phrases_heuristic": {
+    "accuracy": 0.5896,
+    "f1_ambiguous": 0.6063,
+    "f1_ambiguous_ci": [
+      0.5247,
+      0.6751
+    ],
+    "cohen_kappa": 0.1787,
+    "predicted_ambiguous": 0.5047
+  },
+  "antecedent_match_on_clear": 0.6735
+}
