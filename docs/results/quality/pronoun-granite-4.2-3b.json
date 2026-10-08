@@ -1,0 +1,37 @@
+{
+  "run": "pronoun-granite-4.2-3b",
+  "sentences": 212,
+  "errors": 0,
+  "base_rate_ambiguous": 0.5377,
+  "llm": {
+    "accuracy": 0.5377,
+    "f1_ambiguous": 0.6994,
+    "f1_ambiguous_ci": [
+      0.641,
+      0.7529
+    ],
+    "cohen_kappa": 0.0,
+    "predicted_ambiguous": 1.0
+  },
+  "always_ambiguous": {
+    "accuracy": 0.5377,
+    "f1_ambiguous": 0.6994,
+    "f1_ambiguous_ci": [
+      0.641,
+      0.7529
+    ],
+    "cohen_kappa": 0.0,
+    "predicted_ambiguous": 1.0
+  },
+  "two_noun_phrases_heuristic": {
+    "accuracy": 0.5896,
+    "f1_ambiguous": 0.6063,
+    "f1_ambiguous_ci": [
+      0.5258,
+      0.6754
+    ],
+    "cohen_kappa": 0.1787,
+    "predicted_ambiguous": 0.5047
+  },
+  "antecedent_match_on_clear": 0.2857
+}
