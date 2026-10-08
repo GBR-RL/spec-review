@@ -1,0 +1,102 @@
+{
+  "method": "hybrid",
+  "pairs": {
+    "CM1:HLR-LLR": {
+      "sources_with_links": 19,
+      "links": 45,
+      "map": 0.7351,
+      "map_ci": [
+        0.6204,
+        0.8461
+      ],
+      "recall@1": 0.4167,
+      "recall@5": 0.8026,
+      "recall@10": 0.9518
+    },
+    "eTOUR:UC-CODE": {
+      "sources_with_links": 57,
+      "links": 308,
+      "map": 0.4649,
+      "map_ci": [
+        0.4075,
+        0.5273
+      ],
+      "recall@1": 0.1434,
+      "recall@5": 0.4005,
+      "recall@10": 0.5482
+    },
+    "iTrust:UC-CODE": {
+      "sources_with_links": 111,
+      "links": 399,
+      "map": 0.2449,
+      "map_ci": [
+        0.2018,
+        0.2872
+      ],
+      "recall@1": 0.0828,
+      "recall@5": 0.2939,
+      "recall@10": 0.3904
+    },
+    "EasyClinic:UC-ID": {
+      "sources_with_links": 18,
+      "links": 26,
+      "map": 0.9444,
+      "map_ci": [
+        0.8796,
+        1.0
+      ],
+      "recall@1": 0.75,
+      "recall@5": 0.9722,
+      "recall@10": 0.9722
+    },
+    "EasyClinic:UC-TC": {
+      "sources_with_links": 7,
+      "links": 63,
+      "map": 0.7717,
+      "map_ci": [
+        0.5493,
+        0.9358
+      ],
+      "recall@1": 0.103,
+      "recall@5": 0.4027,
+      "recall@10": 0.7418
+    },
+    "EasyClinic:UC-CODE": {
+      "sources_with_links": 28,
+      "links": 93,
+      "map": 0.7475,
+      "map_ci": [
+        0.6688,
+        0.8262
+      ],
+      "recall@1": 0.253,
+      "recall@5": 0.7869,
+      "recall@10": 0.8905
+    },
+    "EasyClinic:ID-CODE": {
+      "sources_with_links": 20,
+      "links": 69,
+      "map": 0.6591,
+      "map_ci": [
+        0.5762,
+        0.746
+      ],
+      "recall@1": 0.2625,
+      "recall@5": 0.6292,
+      "recall@10": 0.8375
+    },
+    "EasyClinic:TC-CODE": {
+      "sources_with_links": 63,
+      "links": 204,
+      "map": 0.6257,
+      "map_ci": [
+        0.5711,
+        0.6775
+      ],
+      "recall@1": 0.2394,
+      "recall@5": 0.6283,
+      "recall@10": 0.8717
+    }
+  },
+  "mean_map": 0.6492
+}

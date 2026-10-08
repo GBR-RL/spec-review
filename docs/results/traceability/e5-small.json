@@ -1,0 +1,102 @@
+{
+  "method": "e5-small",
+  "pairs": {
+    "CM1:HLR-LLR": {
+      "sources_with_links": 19,
+      "links": 45,
+      "map": 0.581,
+      "map_ci": [
+        0.464,
+        0.6999
+      ],
+      "recall@1": 0.2325,
+      "recall@5": 0.8596,
+      "recall@10": 0.9167
+    },
+    "eTOUR:UC-CODE": {
+      "sources_with_links": 57,
+      "links": 308,
+      "map": 0.3351,
+      "map_ci": [
+        0.2854,
+        0.3888
+      ],
+      "recall@1": 0.1111,
+      "recall@5": 0.3146,
+      "recall@10": 0.4081
+    },
+    "iTrust:UC-CODE": {
+      "sources_with_links": 111,
+      "links": 399,
+      "map": 0.1205,
+      "map_ci": [
+        0.0866,
+        0.1562
+      ],
+      "recall@1": 0.0461,
+      "recall@5": 0.1251,
+      "recall@10": 0.2081
+    },
+    "EasyClinic:UC-ID": {
+      "sources_with_links": 18,
+      "links": 26,
+      "map": 0.8704,
+      "map_ci": [
+        0.7639,
+        0.963
+      ],
+      "recall@1": 0.5833,
+      "recall@5": 1.0,
+      "recall@10": 1.0
+    },
+    "EasyClinic:UC-TC": {
+      "sources_with_links": 7,
+      "links": 63,
+      "map": 0.7555,
+      "map_ci": [
+        0.5013,
+        0.9712
+      ],
+      "recall@1": 0.092,
+      "recall@5": 0.4396,
+      "recall@10": 0.7106
+    },
+    "EasyClinic:UC-CODE": {
+      "sources_with_links": 28,
+      "links": 93,
+      "map": 0.5841,
+      "map_ci": [
+        0.4978,
+        0.6716
+      ],
+      "recall@1": 0.1488,
+      "recall@5": 0.6589,
+      "recall@10": 0.8226
+    },
+    "EasyClinic:ID-CODE": {
+      "sources_with_links": 20,
+      "links": 69,
+      "map": 0.4129,
+      "map_ci": [
+        0.3588,
+        0.4605
+      ],
+      "recall@1": 0.2042,
+      "recall@5": 0.4,
+      "recall@10": 0.5292
+    },
+    "EasyClinic:TC-CODE": {
+      "sources_with_links": 63,
+      "links": 204,
+      "map": 0.6573,
+      "map_ci": [
+        0.6122,
+        0.7059
+      ],
+      "recall@1": 0.2712,
+      "recall@5": 0.6759,
+      "recall@10": 0.8677
+    }
+  },
+  "mean_map": 0.5396
+}

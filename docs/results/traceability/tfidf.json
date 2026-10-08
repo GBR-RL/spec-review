@@ -1,0 +1,102 @@
+{
+  "method": "tfidf",
+  "pairs": {
+    "CM1:HLR-LLR": {
+      "sources_with_links": 19,
+      "links": 45,
+      "map": 0.6858,
+      "map_ci": [
+        0.5412,
+        0.8258
+      ],
+      "recall@1": 0.3904,
+      "recall@5": 0.6974,
+      "recall@10": 0.8991
+    },
+    "eTOUR:UC-CODE": {
+      "sources_with_links": 57,
+      "links": 308,
+      "map": 0.4439,
+      "map_ci": [
+        0.375,
+        0.5168
+      ],
+      "recall@1": 0.1423,
+      "recall@5": 0.3828,
+      "recall@10": 0.5397
+    },
+    "iTrust:UC-CODE": {
+      "sources_with_links": 111,
+      "links": 399,
+      "map": 0.2806,
+      "map_ci": [
+        0.2323,
+        0.3279
+      ],
+      "recall@1": 0.0921,
+      "recall@5": 0.3264,
+      "recall@10": 0.4591
+    },
+    "EasyClinic:UC-ID": {
+      "sources_with_links": 18,
+      "links": 26,
+      "map": 0.8006,
+      "map_ci": [
+        0.6987,
+        0.9024
+      ],
+      "recall@1": 0.5,
+      "recall@5": 0.9722,
+      "recall@10": 0.9722
+    },
+    "EasyClinic:UC-TC": {
+      "sources_with_links": 7,
+      "links": 63,
+      "map": 0.7412,
+      "map_ci": [
+        0.4946,
+        0.9474
+      ],
+      "recall@1": 0.0792,
+      "recall@5": 0.4027,
+      "recall@10": 0.6593
+    },
+    "EasyClinic:UC-CODE": {
+      "sources_with_links": 28,
+      "links": 93,
+      "map": 0.6525,
+      "map_ci": [
+        0.572,
+        0.7315
+      ],
+      "recall@1": 0.2232,
+      "recall@5": 0.6839,
+      "recall@10": 0.8696
+    },
+    "EasyClinic:ID-CODE": {
+      "sources_with_links": 20,
+      "links": 69,
+      "map": 0.7452,
+      "map_ci": [
+        0.6537,
+        0.8361
+      ],
+      "recall@1": 0.2625,
+      "recall@5": 0.7792,
+      "recall@10": 0.8625
+    },
+    "EasyClinic:TC-CODE": {
+      "sources_with_links": 63,
+      "links": 204,
+      "map": 0.6124,
+      "map_ci": [
+        0.5545,
+        0.6701
+      ],
+      "recall@1": 0.2235,
+      "recall@5": 0.6601,
+      "recall@10": 0.8201
+    }
+  },
+  "mean_map": 0.6203
+}
