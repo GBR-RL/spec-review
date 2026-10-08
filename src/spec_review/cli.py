@@ -75,9 +75,45 @@ def classify(
             )
 
 
+@app.command("lora-train")
+def lora_train(
+    fold: int = typer.Option(..., help="Fold to hold out (0-4)."),
+    epochs: int = typer.Option(3),
+) -> None:
+    """Fine-tune Qwen3-0.6B with LoRA on four folds and predict the fifth."""
+    from spec_review.classify import lora
+
+    typer.echo(f"wrote {lora.train_fold(fold, epochs=epochs)}")
+
+
+@app.command("classify-score")
+def classify_score(
+    method: str = typer.Option(..., help="Name for the results, e.g. lora_qwen3-0.6b"),
+    lora_dir: Annotated[
+        Path | None, typer.Option(help="Folder with the five LoRA fold files.")
+    ] = None,
+    llm_run: str = typer.Option("", help="Name of a merged few-shot LLM run."),
+) -> None:
+    """Score out-of-fold predictions made on CI (12 classes, and functional vs NFR)."""
+    import pandas as pd
+
+    from spec_review.classify import cv, lora
+    from spec_review.eval.runs import run_dir
+
+    if lora_dir is not None:
+        preds = lora.merge(lora_dir)
+    else:
+        preds = pd.read_json(run_dir(llm_run) / "merged.jsonl", lines=True, dtype={"id": str})
+        preds = preds.assign(pred=preds["pred"].fillna("F"))
+    for task in ("all-12", "fr-nfr"):
+        r = cv.score_predictions(task, method, preds)
+        lo, hi = r["macro_f1_ci"]
+        typer.echo(f"{task:7s} {method}: macro-F1 {r['macro_f1']:.3f} [{lo:.3f}, {hi:.3f}]")
+
+
 @app.command("llm-run")
 def llm_run(
-    task: str = typer.Option(..., help="pronoun or review"),
+    task: str = typer.Option(..., help="pronoun, review or classify"),
     model: str = typer.Option("qwen3.5-4b"),
     name: str = typer.Option("", help="Run name (default: task-model)."),
     shard: int = typer.Option(0),
@@ -93,6 +129,8 @@ def llm_run(
         path = runs.pronoun_run(llm, run, shard, shards)
     elif task == "review":
         path = runs.review_run(llm, run, shard, shards)
+    elif task == "classify":
+        path = runs.classify_run(llm, run, shard, shards)
     else:
         raise typer.BadParameter(f"unknown task {task!r}")
     typer.echo(f"wrote {path}")

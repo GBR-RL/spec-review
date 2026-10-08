@@ -74,16 +74,47 @@ def bootstrap_macro_f1(y: np.ndarray, p: np.ndarray, n_boot: int = 1000) -> tupl
 def evaluate(
     task_name: str, method_name: str, method: Method, grouped: bool = True
 ) -> dict[str, Any]:
-    task = TASKS[task_name]
-    data = task.select(promise.load()).reset_index(drop=True)
-    y = task.target(data).reset_index(drop=True)
+    data, y, _ = task_data(task_name, grouped)
     pred = np.empty(len(data), dtype=object)
     fold_of = np.empty(len(data), dtype=int)
     for k, (train, test) in enumerate(folds(data, y, grouped=grouped)):
         predict = method(data.text.iloc[train].tolist(), y.iloc[train].tolist())
         pred[test] = list(predict(data.text.iloc[test].tolist()))
         fold_of[test] = k
-    y_arr = y.to_numpy()
+    return score(
+        task_name,
+        report_name(method_name, grouped),
+        data=data,
+        y_arr=y.to_numpy(),
+        pred=pred,
+        fold_of=fold_of,
+    )
+
+
+def report_name(method_name: str, grouped: bool = True) -> str:
+    return method_name if grouped else f"{method_name}_random-folds"
+
+
+def task_data(task_name: str, grouped: bool = True) -> tuple[pd.DataFrame, pd.Series, np.ndarray]:
+    """The task's requirements, labels and the fold index of every requirement."""
+    task = TASKS[task_name]
+    data = task.select(promise.load()).reset_index(drop=True)
+    y = task.target(data).reset_index(drop=True)
+    fold_of = np.empty(len(data), dtype=int)
+    for k, (_, test) in enumerate(folds(data, y, grouped=grouped)):
+        fold_of[test] = k
+    return data, y, fold_of
+
+
+def score(
+    task_name: str,
+    method: str,
+    *,
+    data: pd.DataFrame,
+    y_arr: np.ndarray,
+    pred: np.ndarray,
+    fold_of: np.ndarray,
+) -> dict[str, Any]:
     labels = sorted(set(y_arr))
     per_class = f1_score(y_arr, pred, labels=labels, average=None, zero_division=0)
     per_fold = [
@@ -92,8 +123,10 @@ def evaluate(
     ]
     report = {
         "task": task_name,
-        "method": method_name if grouped else f"{method_name}_random-folds",
-        "folds": "grouped by project" if grouped else "random (projects shared)",
+        "method": method,
+        "folds": "random (projects shared)"
+        if method.endswith("random-folds")
+        else "grouped by project",
         "requirements": len(data),
         "projects": int(data.project.nunique()),
         "macro_f1": float(f1_score(y_arr, pred, average="macro", zero_division=0)),
@@ -105,6 +138,19 @@ def evaluate(
     }
     save(report, data, y_arr, pred)
     return report
+
+
+def score_predictions(task_name: str, method: str, predictions: pd.DataFrame) -> dict[str, Any]:
+    """Score pooled out-of-fold predictions (columns id, pred) made elsewhere, e.g. on CI.
+
+    Predictions of the 12-class task also give the functional vs non-functional view.
+    """
+    data, y, fold_of = task_data(task_name)
+    pred_by_id = dict(zip(predictions.id, predictions.pred, strict=True))
+    pred = np.array([pred_by_id[i] for i in data.id], dtype=object)
+    if task_name == "fr-nfr":
+        pred = np.where(pred == "F", "F", "NFR").astype(object)
+    return score(task_name, method, data=data, y_arr=y.to_numpy(), pred=pred, fold_of=fold_of)
 
 
 def _round(v: Any) -> Any:

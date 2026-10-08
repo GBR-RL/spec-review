@@ -50,3 +50,25 @@ def test_bootstrap_interval_brackets_the_score() -> None:
     p = np.where(np.arange(100) % 5 == 0, "b", y)
     lo, hi = cv.bootstrap_macro_f1(y, p, n_boot=200)
     assert lo < 0.9 < hi
+
+
+def test_few_shot_examples_come_from_other_folds() -> None:
+    from spec_review.classify import llm as fewshot
+
+    df = _data()
+    fold_of = (df.project % 5).to_numpy()
+    shots = fewshot.examples_for(df, fold_of, k=4)
+    for i, rows in enumerate(shots):
+        assert len(rows) == 4
+        assert all(fold_of[j] != fold_of[i] for j in rows)
+
+
+def test_few_shot_messages_alternate_examples_and_answers() -> None:
+    from spec_review.classify import llm as fewshot
+
+    msgs = fewshot.messages(
+        "The system shall respond in 2 s.", [("Data shall be encrypted.", "SE")]
+    )
+    assert [m["role"] for m in msgs] == ["system", "user", "assistant", "user"]
+    assert '"SE"' in msgs[2]["content"]
+    assert "PE: performance" in msgs[0]["content"]
