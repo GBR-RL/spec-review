@@ -122,19 +122,39 @@ def pronoun_report(run: str) -> dict[str, Any]:
     )
 
 
+_NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def numbers_kept(original: str, rewrite: str) -> bool:
+    """Every number of the original survives the rewrite (a cheap guard against meaning drift)."""
+    return set(_NUMBER.findall(original)) <= set(_NUMBER.findall(rewrite))
+
+
+def rewrite_text(row: dict[str, Any]) -> str:
+    rewrites = row.get("rewrites")
+    if isinstance(rewrites, list):
+        return " ".join(str(x) for x in rewrites)
+    return str(row.get("rewrite", ""))
+
+
 def review_report(run: str) -> dict[str, Any]:
     df = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
     ok = df[df.get("error", pd.Series(index=df.index, dtype=object)).isna()]
     texts = promise.load().set_index("id").text
-    before, after, new_rules, unchanged, placeholders = [], [], 0, 0, 0
+    before, after, new_rules, unchanged, placeholders, kept, parts = [], [], 0, 0, 0, 0, []
     for r in ok.to_dict("records"):
-        b = {f.rule for f in rules.check(str(texts[r["id"]]))}
-        a = {f.rule for f in rules.check(str(r["rewrite"]))}
+        original = str(texts[r["id"]])
+        pieces = r["rewrites"] if isinstance(r.get("rewrites"), list) else [rewrite_text(r)]
+        b = {f.rule for f in rules.check(original)}
+        found = [f.rule for p in pieces for f in rules.check(str(p))]
+        a = set(found)
         before.append(len(b))
         after.append(len(a))
         new_rules += bool(a - b)
-        unchanged += _norm(str(r["rewrite"])) == _norm(str(texts[r["id"]]))
-        placeholders += "[value]" in str(r["rewrite"])
+        unchanged += _norm(rewrite_text(r)) == _norm(original)
+        placeholders += "[value]" in rewrite_text(r)
+        kept += numbers_kept(original, rewrite_text(r))
+        parts.append(len(pieces))
     b_arr, a_arr = np.array(before), np.array(after)
     flagged = b_arr > 0
     issue_types = pd.Series([i["type"] for issues in ok.issues for i in issues]).value_counts()
@@ -152,6 +172,8 @@ def review_report(run: str) -> dict[str, Any]:
             "rewrites_adding_a_new_rule": float(new_rules / max(1, len(ok))),
             "returned_unchanged": float(unchanged / max(1, len(ok))),
             "rewrites_with_value_placeholder": float(placeholders / max(1, len(ok))),
+            "numbers_kept": float(kept / max(1, len(ok))),
+            "requirements_per_rewrite": float(np.mean(parts)) if parts else None,
             "llm_issue_types": {str(k): int(v) for k, v in issue_types.items()},
             "llm_issues_per_requirement": float(ok.issues.map(len).mean()),
         },
