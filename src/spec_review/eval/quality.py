@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
@@ -130,7 +131,7 @@ def numbers_kept(original: str, rewrite: str) -> bool:
     return set(_NUMBER.findall(original)) <= set(_NUMBER.findall(rewrite))
 
 
-def rewrite_text(row: dict[str, Any]) -> str:
+def rewrite_text(row: Mapping[Any, Any]) -> str:
     rewrites = row.get("rewrites")
     if isinstance(rewrites, list):
         return " ".join(str(x) for x in rewrites)
