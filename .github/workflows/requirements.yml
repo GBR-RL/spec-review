@@ -1,0 +1,30 @@
+name: Requirements review
+
+# Runs this repository's own action on its example requirement files, the way another
+# repository would use it.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - id: review
+        uses: ./
+        with:
+          files: "examples/*.req examples/*.reqif"
+          report: spec-review.html
+      - name: The example files contain known defects
+        run: test "${{ steps.review.outputs.findings }}" -gt 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: requirements-review
+          path: spec-review.html
+          retention-days: 14
