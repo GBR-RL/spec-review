@@ -153,3 +153,25 @@ def verify_run(llm: LLM, name: str, index: int = 0, count: int = 1, method: str 
 
     path = run_dir(name) / f"shard{index}of{count}.jsonl"
     return loop(items, fn, path, index, count)
+
+
+def conflict_run(llm: LLM, name: str, index: int = 0, count: int = 1) -> Path:
+    """LLM verdicts on the top TF-IDF candidates of every document set."""
+    from spec_review.conflicts import detect, judge
+    from spec_review.data import conflicts
+
+    df = conflicts.load()
+    items = []
+    for dataset, group in df.groupby("dataset"):
+        pairs = group.reset_index(drop=True)
+        order = (-detect.tfidf_similarity(pairs)).argsort(kind="stable")[: judge.TOP_K]
+        for i in order:
+            row = pairs.iloc[int(i)]
+            items.append((f"{dataset}|{row.a}|{row.b}", (row.a, row.b)))
+
+    def fn(pair: tuple[str, str]) -> dict[str, Any]:
+        out, c = judge.judge(llm, pair[0], pair[1])
+        return {**out, **_usage(c)}
+
+    path = run_dir(name) / f"shard{index}of{count}.jsonl"
+    return loop(items, fn, path, index, count)
