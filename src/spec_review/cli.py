@@ -75,6 +75,71 @@ def classify(
             )
 
 
+@app.command("conflicts-data")
+def conflicts_data() -> None:
+    """Download the labelled conflict pairs (pinned, not redistributed) and pool them."""
+    from spec_review.data import conflicts
+
+    df = conflicts.build()
+    typer.echo(df.groupby("dataset").conflict.agg(["size", "sum"]).to_string())
+
+
+@app.command("conflicts-eval")
+def conflicts_eval(
+    method: str = typer.Option("all", help="tfidf, nli, bge-m3, tfidf_x_nli, bge-m3_x_nli or all"),
+) -> None:
+    """Rank every pair of every document set and score the rankings."""
+    from spec_review.conflicts import detect as d
+
+    nli, emb = d.nli_contradiction(), d.embedding_similarity()
+    methods = {
+        "tfidf": d.tfidf_similarity,
+        "nli": nli,
+        "bge-m3": emb,
+        "tfidf_x_nli": d.product(d.tfidf_similarity, nli),
+        "bge-m3_x_nli": d.product(emb, nli),
+    }
+    for name, fn in methods.items():
+        if method in ("all", name):
+            r = d.evaluate(name, fn)
+            typer.echo(f"{name:13s} mean AP {r['mean_average_precision']:.3f}")
+
+
+@app.command("conflicts-judge-score")
+def conflicts_judge_score(run: str = typer.Option("conflict-qwen3.5-4b")) -> None:
+    """Re-rank each set's top TF-IDF candidates by the LLM verdicts and score again."""
+    import json
+
+    import numpy as np
+    import pandas as pd
+
+    from spec_review.conflicts import detect as d
+    from spec_review.data import conflicts
+    from spec_review.eval.runs import run_dir
+
+    verdicts = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
+    ok = verdicts[verdicts.get("error", pd.Series(index=verdicts.index, dtype=object)).isna()]
+    llm = dict(zip(ok.id, ok.score.astype(float), strict=True))
+    report: dict[str, Any] = {"method": "tfidf+llm-judge", "run": run, "datasets": {}}
+    for dataset, group in conflicts.load().groupby("dataset"):
+        pairs = group.reset_index(drop=True)
+        base = d.tfidf_similarity(pairs)
+        keys = [f"{dataset}|{a}|{b}" for a, b in zip(pairs.a, pairs.b, strict=True)]
+        # Judged pairs move above the rest by verdict; TF-IDF orders ties and the tail.
+        bonus = np.array([llm.get(k, np.nan) for k in keys])
+        judged = ~np.isnan(bonus)
+        score = base.copy()
+        score[judged] = 10 + np.nan_to_num(bonus[judged]) + base[judged]
+        report["datasets"][str(dataset)] = d.ranking_scores(pairs.conflict.to_numpy(), score)
+    report["mean_average_precision"] = float(
+        np.mean([v["average_precision"] for v in report["datasets"].values()])
+    )
+    report["verdicts"], report["errors"] = len(ok), len(verdicts) - len(ok)
+    text = json.dumps(d._round(report), indent=2) + "\n"
+    (d.RESULTS / "tfidf_llm-judge.json").write_text(text)
+    typer.echo(f"tfidf+llm-judge mean AP {report['mean_average_precision']:.3f}")
+
+
 @app.command("trace-eval")
 def trace_eval(
     method: str = typer.Option("all", help="tfidf, e5-small, bge-m3, hybrid or all"),
@@ -200,7 +265,7 @@ def classify_score(
 @app.command("llm-run")
 def llm_run(
     task: str = typer.Option(
-        ..., help="pronoun, pronoun-candidates, review, classify or trace-verify"
+        ..., help="pronoun, pronoun-candidates, review, classify, trace-verify or conflict"
     ),
     model: str = typer.Option("qwen3.5-4b"),
     name: str = typer.Option("", help="Run name (default: task-model)."),
@@ -221,6 +286,8 @@ def llm_run(
         path = runs.classify_run(llm, run, shard, shards)
     elif task == "trace-verify":
         path = runs.verify_run(llm, run, shard, shards)
+    elif task == "conflict":
+        path = runs.conflict_run(llm, run, shard, shards)
     else:
         raise typer.BadParameter(f"unknown task {task!r}")
     typer.echo(f"wrote {path}")

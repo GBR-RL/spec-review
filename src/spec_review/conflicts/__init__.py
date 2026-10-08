@@ -1,0 +1,1 @@
+"""Conflicting requirement pairs."""
