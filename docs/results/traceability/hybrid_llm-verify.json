@@ -1,0 +1,106 @@
+{
+  "method": "hybrid+llm-verify",
+  "run": "trace-verify-qwen3.5-4b",
+  "pairs": {
+    "CM1:HLR-LLR": {
+      "sources_with_links": 19,
+      "links": 45,
+      "map": 0.6944,
+      "map_ci": [
+        0.5628,
+        0.824
+      ],
+      "recall@1": 0.3991,
+      "recall@5": 0.75,
+      "recall@10": 0.9518
+    },
+    "eTOUR:UC-CODE": {
+      "sources_with_links": 57,
+      "links": 308,
+      "map": 0.4435,
+      "map_ci": [
+        0.384,
+        0.5037
+      ],
+      "recall@1": 0.1355,
+      "recall@5": 0.3989,
+      "recall@10": 0.5482
+    },
+    "iTrust:UC-CODE": {
+      "sources_with_links": 111,
+      "links": 399,
+      "map": 0.2559,
+      "map_ci": [
+        0.2126,
+        0.3049
+      ],
+      "recall@1": 0.0913,
+      "recall@5": 0.2786,
+      "recall@10": 0.3904
+    },
+    "EasyClinic:UC-ID": {
+      "sources_with_links": 18,
+      "links": 26,
+      "map": 0.7533,
+      "map_ci": [
+        0.6247,
+        0.8773
+      ],
+      "recall@1": 0.5556,
+      "recall@5": 0.8611,
+      "recall@10": 0.9722
+    },
+    "EasyClinic:UC-TC": {
+      "sources_with_links": 7,
+      "links": 63,
+      "map": 0.7247,
+      "map_ci": [
+        0.5288,
+        0.8819
+      ],
+      "recall@1": 0.0716,
+      "recall@5": 0.3747,
+      "recall@10": 0.7418
+    },
+    "EasyClinic:UC-CODE": {
+      "sources_with_links": 28,
+      "links": 93,
+      "map": 0.6058,
+      "map_ci": [
+        0.5224,
+        0.6812
+      ],
+      "recall@1": 0.1994,
+      "recall@5": 0.6173,
+      "recall@10": 0.8905
+    },
+    "EasyClinic:ID-CODE": {
+      "sources_with_links": 20,
+      "links": 69,
+      "map": 0.709,
+      "map_ci": [
+        0.622,
+        0.787
+      ],
+      "recall@1": 0.2708,
+      "recall@5": 0.6833,
+      "recall@10": 0.8375
+    },
+    "EasyClinic:TC-CODE": {
+      "sources_with_links": 63,
+      "links": 204,
+      "map": 0.3788,
+      "map_ci": [
+        0.3329,
+        0.4267
+      ],
+      "recall@1": 0.0635,
+      "recall@5": 0.4299,
+      "recall@10": 0.8717
+    }
+  },
+  "mean_map": 0.5707,
+  "precision_of_yes": 0.5092,
+  "verdicts": 3840,
+  "errors": 0
+}
