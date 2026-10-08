@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Annotated
+
 import typer
 
 from spec_review import __version__
@@ -28,6 +31,28 @@ def data() -> None:
     arts, links = coest.build()
     summary = arts.groupby(["dataset", "kind"]).size().to_string()
     typer.echo(f"CoEST: {len(arts)} artifacts, {len(links)} links\n{summary}")
+
+
+@app.command()
+def lint(
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="Requirements file.")],
+    fmt: str = typer.Option("text", "--format", help="text, json or github"),
+    fail_on_findings: bool = typer.Option(False, help="Exit with 1 if anything is found."),
+) -> None:
+    """Check every requirement in a file against the quality rules."""
+    from spec_review.quality.lint import lint as run
+    from spec_review.quality.lint import render
+
+    reqs = run(path)
+    out = render(reqs, path, fmt)
+    if out:
+        typer.echo(out)
+    n = sum(len(r.findings) for r in reqs)
+    if fmt != "json":
+        flagged = sum(bool(r.findings) for r in reqs)
+        typer.echo(f"{n} findings in {flagged} of {len(reqs)} requirements", err=True)
+    if fail_on_findings and n:
+        raise typer.Exit(1)
 
 
 @app.command("data-card")
