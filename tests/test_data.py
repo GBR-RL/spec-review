@@ -67,11 +67,13 @@ def test_easyclinic_oracle(tmp_path: Path) -> None:
     oracle = tmp_path / "EasyClinic" / "oracle"
     oracle.mkdir()
     (oracle / "UC_TC.txt").write_text("1.txt 51.txt\n2.txt\n", encoding="utf-8")
+    (oracle / "UC_ID.txt").write_text("1.txt:51.txt\n", encoding="utf-8")
     for folder in ("2 - Interaction diagrams", "4 - class description"):
         (docs / folder).mkdir()
     arts, links = coest._easyclinic(tmp_path / "EasyClinic")
     assert {a["id"] for a in arts} == {"UC1", "TC51"}
-    assert links == [{"dataset": "EasyClinic", "source": "UC1", "target": "TC51"}]
+    assert {"dataset": "EasyClinic", "source": "UC1", "target": "TC51"} in links
+    assert {"dataset": "EasyClinic", "source": "UC1", "target": "ID51"} in links
 
 
 @pytest.mark.data

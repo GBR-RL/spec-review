@@ -117,7 +117,8 @@ def _easyclinic(base: Path) -> tuple[list[dict[str, str]], list[dict[str, str]]]
         if src_prefix not in EASYCLINIC_KINDS or tgt_prefix not in EASYCLINIC_KINDS:
             continue  # e.g. the "SimpleUC" variant
         for line in read_text(f).splitlines():
-            parts = line.split()
+            # Lines are "1.txt 122.txt 123.txt" or "7.txt:31.txt 32.txt".
+            parts = line.replace(":", " ").split()
             if len(parts) < 2:
                 continue
             src = f"{src_prefix}{Path(parts[0]).stem}"
