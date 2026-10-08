@@ -1,0 +1,9 @@
+# Example requirements for a dosing pump controller
+
+PUMP-01: The controller shall stop the pump within 2 s of a line pressure above 8 bar.
+PUMP-02: The pump should start quickly after power-up.
+PUMP-03: Dosing rates shall be logged.
+PUMP-04: The operator shall start and/or stop the pump from the panel, the app, etc.
+PUMP-05: The controller shall raise an alarm when it detects a leak. It shall also stop the pump.
+PUMP-06: The maximum dosing rate shall be TBD.
+PUMP-07: The HMI shall display the current dosing rate in ml/min with one decimal place.
