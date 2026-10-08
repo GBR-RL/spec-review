@@ -55,6 +55,61 @@ def lint(
         raise typer.Exit(1)
 
 
+@app.command("llm-run")
+def llm_run(
+    task: str = typer.Option(..., help="pronoun or review"),
+    model: str = typer.Option("qwen3.5-4b"),
+    name: str = typer.Option("", help="Run name (default: task-model)."),
+    shard: int = typer.Option(0),
+    shards: int = typer.Option(1),
+) -> None:
+    """Run an LLM task over one shard of its items (JSON lines, resumable)."""
+    from spec_review.eval import runs
+    from spec_review.llm.client import LLM
+
+    llm = LLM(model)
+    run = name or f"{task}-{model}"
+    if task == "pronoun":
+        path = runs.pronoun_run(llm, run, shard, shards)
+    elif task == "review":
+        path = runs.review_run(llm, run, shard, shards)
+    else:
+        raise typer.BadParameter(f"unknown task {task!r}")
+    typer.echo(f"wrote {path}")
+
+
+@app.command("llm-merge")
+def llm_merge(name: str = typer.Option(...)) -> None:
+    """Join the shard files of an LLM run."""
+    from spec_review.eval import runs
+
+    df = runs.merge(name)
+    errors = int(df["error"].notna().sum()) if "error" in df else 0
+    typer.echo(f"{name}: {len(df)} items, {errors} errors")
+
+
+@app.command("quality-report")
+def quality_report(
+    pronoun_run: str = typer.Option("pronoun-qwen3.5-4b"),
+    review_run: str = typer.Option("review-qwen3.5-4b"),
+) -> None:
+    """Score the pronoun-ambiguity and review runs found on disk."""
+    from spec_review.eval import quality
+    from spec_review.eval.runs import run_dir
+
+    for name, fn in ((pronoun_run, quality.pronoun_report), (review_run, quality.review_report)):
+        if (run_dir(name) / "merged.jsonl").exists():
+            typer.echo(fn(name))
+
+
+@app.command("model-url")
+def model_url(name: str) -> None:
+    """Download URL of a GGUF model."""
+    from spec_review.llm.models import MODELS
+
+    typer.echo(MODELS[name].url)
+
+
 @app.command("data-card")
 def data_card() -> None:
     """Regenerate docs/data.md from the prepared datasets."""
