@@ -343,6 +343,17 @@ def export_reqif(
     typer.echo(f"wrote {len(rows)} requirements to {out}")
 
 
+@app.command()
+def report(
+    paths: Annotated[list[Path], typer.Argument(exists=True, dir_okay=False)],
+    out: Annotated[Path, typer.Option("--out", "-o")] = Path("spec-review.html"),
+) -> None:
+    """Write an HTML report of the rule findings for one or more requirements files."""
+    from spec_review.quality import report as rep
+
+    typer.echo(f"wrote {rep.write(paths, out)}")
+
+
 @app.command("data-card")
 def data_card() -> None:
     """Regenerate docs/data.md from the prepared datasets."""
