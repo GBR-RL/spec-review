@@ -55,6 +55,26 @@ def lint(
         raise typer.Exit(1)
 
 
+@app.command()
+def classify(
+    task: str = typer.Option("all", help="fr-nfr, nfr-11, all-12 or all"),
+    method: str = typer.Option("all", help="tfidf_lr, tfidf_svm or all"),
+    random_folds: bool = typer.Option(False, help="Plain stratified folds (leakage check)."),
+) -> None:
+    """Cross-validate classifiers over projects on PROMISE_exp."""
+    from spec_review.classify import baselines, cv
+
+    tasks = list(cv.TASKS) if task == "all" else [task]
+    methods = list(baselines.METHODS) if method == "all" else [method]
+    for t in tasks:
+        for m in methods:
+            r = cv.evaluate(t, m, baselines.METHODS[m], grouped=not random_folds)
+            lo, hi = r["macro_f1_ci"]
+            typer.echo(
+                f"{t:7s} {r['method']:24s} macro-F1 {r['macro_f1']:.3f} [{lo:.3f}, {hi:.3f}]"
+            )
+
+
 @app.command("llm-run")
 def llm_run(
     task: str = typer.Option(..., help="pronoun or review"),
