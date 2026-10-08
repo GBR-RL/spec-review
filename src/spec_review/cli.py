@@ -325,6 +325,24 @@ def model_url(name: str) -> None:
     typer.echo(MODELS[name].url)
 
 
+@app.command("export-reqif")
+def export_reqif(
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="Requirements file.")],
+    out: Annotated[Path, typer.Option("--out", "-o", help="ReqIF file to write.")],
+) -> None:
+    """Write the requirements and their rule findings as ReqIF for a requirements tool."""
+    from spec_review import reqif
+    from spec_review.quality.lint import lint as run
+
+    rows = [
+        {"ID": r.id, "Text": r.text,
+         "spec-review findings": "; ".join(f"{f.rule}: {f.text}".rstrip(": ") for f in r.findings)}
+        for r in run(path)
+    ]  # fmt: skip
+    reqif.write(out, rows, title=f"spec-review: {path.name}")
+    typer.echo(f"wrote {len(rows)} requirements to {out}")
+
+
 @app.command("data-card")
 def data_card() -> None:
     """Regenerate docs/data.md from the prepared datasets."""
