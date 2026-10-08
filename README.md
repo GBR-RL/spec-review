@@ -186,12 +186,24 @@ precision (MAP).
 | e5-small embeddings | .540 |
 | bge-m3 embeddings | .561 |
 | TF-IDF | .620 |
-| hybrid (TF-IDF + bge-m3, min-max normalised per artifact) | **.649** |
+| hybrid (TF-IDF + bge-m3, min-max normalised per artifact) | .649 |
+| hybrid, top 10 re-ranked by Qwen3.5-4B verdict and confidence | .571 |
+| hybrid, top 10 re-ranked by Qwen3.5-4B yes/no only (chosen after the fact) | **.661** |
 
 Dense embeddings win where both sides are prose, as with EasyClinic use cases and diagrams. On
 iTrust they fail (MAP .09 to .12), because use cases and Java code share identifiers but little
 natural language. TF-IDF over camelCase-split code catches those shared names, and the hybrid
 keeps the strengths of both.
+
+**LLM verification.** Qwen3.5-4B judged each of the top 10 candidates per artifact (3,840
+verdicts, run on 16 parallel runners by [`verify.yml`](.github/workflows/verify.yml)). Only 51%
+of its "yes" verdicts are true links. The planned re-ranking sorted by verdict and stated
+confidence, and it made the ranking worse (.571). The model says "yes" almost always with
+confidence 5, but its confidence on "no" varies from 1 to 5 at random, and sorting by that noise
+pushes true links down. Using the yes/no verdict alone, with retrieval order kept within each
+group, gives .661, slightly above the hybrid. That rule was picked after seeing the first result
+on the same data, and the gain (+.012) is within the noise, so retrieval without the LLM remains
+the default.
 
 **Impact analysis.** The recovered links (top k per artifact) are loaded into the graph. For each
 EasyClinic use case, the predicted impact is everything reachable within three hops, and it is

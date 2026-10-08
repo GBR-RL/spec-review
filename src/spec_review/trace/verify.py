@@ -49,8 +49,18 @@ def verify(
     return out, c
 
 
-def rerank(ranked: list[str], scores: dict[str, float], k: int = TOP_K) -> list[str]:
-    """Sort the top k by verdict score, keeping retrieval order for ties and the tail as is."""
+def rerank(
+    ranked: list[str], scores: dict[str, float], k: int = TOP_K, *, binary: bool = False
+) -> list[str]:
+    """Sort the top k by verdict score, keeping retrieval order for ties and the tail as is.
+
+    With ``binary`` only the yes/no verdict counts and the stated confidence is ignored.
+    """
     head = ranked[:k]
-    order = sorted(range(len(head)), key=lambda i: (-scores.get(head[i], 0.0), i))
+
+    def key(i: int) -> tuple[float, int]:
+        score = scores.get(head[i], 0.0)
+        return (-float(score > 0) if binary else -score, i)
+
+    order = sorted(range(len(head)), key=key)
     return [head[i] for i in order] + ranked[k:]

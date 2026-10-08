@@ -159,6 +159,7 @@ def trace_eval(
 def trace_verify_score(
     run: str = typer.Option("trace-verify-qwen3.5-4b"),
     method: str = typer.Option("hybrid"),
+    binary: bool = typer.Option(False, help="Use the yes/no verdict only, not the confidence."),
 ) -> None:
     """Re-rank the recovered candidates by the LLM verdicts and score them again."""
     import json
@@ -176,12 +177,13 @@ def trace_verify_score(
     for key, score in zip(ok.id, ok.score, strict=True):
         pair, source, target = key.split("|")
         scores.setdefault(pair, {}).setdefault(source, {})[target] = float(score)
-    out: dict[str, Any] = {"method": f"{method}+llm-verify", "run": run, "pairs": {}}
+    name = f"{method}+llm-verify{'-binary' if binary else ''}"
+    out: dict[str, Any] = {"method": name, "run": run, "pairs": {}}
     yes_right, yes_total = 0, 0
     for pair in recover.PAIRS:
         _, _, gold = recover.pair_data(pair)
         reranked = {
-            s: verify.rerank(r, scores.get(pair.name, {}).get(s, {}))
+            s: verify.rerank(r, scores.get(pair.name, {}).get(s, {}), binary=binary)
             for s, r in rankings.get(pair.name, {}).items()
         }
         out["pairs"][pair.name] = recover.score_rankings(reranked, gold)
@@ -194,7 +196,7 @@ def trace_verify_score(
     out["precision_of_yes"] = yes_right / max(1, yes_total)
     out["verdicts"] = len(ok)
     out["errors"] = len(verdicts) - len(ok)
-    path = recover.RESULTS / f"{method}_llm-verify.json"
+    path = recover.RESULTS / f"{method}_llm-verify{'-binary' if binary else ''}.json"
     path.write_text(json.dumps(recover._round(out), indent=2) + "\n")
     typer.echo(f"mean MAP {out['mean_map']:.3f}, precision of yes {out['precision_of_yes']:.3f}")
 
