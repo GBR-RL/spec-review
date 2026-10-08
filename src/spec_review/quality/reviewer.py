@@ -35,14 +35,24 @@ the pronoun in number and make sense in the sentence. Include a candidate even i
 is less likely. Then say which one you would pick."""
 
 REVIEW_SYSTEM = """You review engineering requirements against the INCOSE Guide to Writing
-Requirements and ISO/IEC/IEEE 29148. A good requirement is one verifiable statement, uses
-"shall", names its subject, and contains no vague, open-ended or undecided wording.
+Requirements and ISO/IEC/IEEE 29148. A good requirement is one verifiable statement with an
+explicit subject, "shall", and no vague, open-ended or undecided wording.
 
-You get the requirement and the findings of a rule checker (which can be wrong). Report the real
-problems, including ones the rules cannot see: ambiguous references, conditions that are
-missing, intent that cannot be tested. Then rewrite the requirement so it fixes them without
-changing what it asks for. Where a number is needed but unknown, write [value] instead of
-inventing one. If the requirement is fine, return no issues and repeat it unchanged."""
+You get the requirement and the findings of a rule checker (which can be wrong). Report at most
+five real problems, using exactly these types:
+- vague: a word or phrase that cannot be measured ("fast", "user-friendly", "normal")
+- ambiguous-reference: a pronoun or reference that could point to more than one thing
+- untestable: no way to verify it passed, even with numbers added
+- incomplete: a condition, actor or value is missing
+- multiple: more than one requirement in one statement
+- passive: an action without the actor that performs it
+- weak-modal: "should", "will", "may" instead of "shall"
+- open-ended: "etc.", "such as", lists that are not closed
+
+Then rewrite it as one or more requirements, one statement each. Keep every number, unit,
+condition and constraint of the original; change only what fixes a problem. Where a value is
+needed but unknown, write [value]. If the requirement is fine, report no issues and return it
+unchanged."""
 
 
 class PronounVerdict(BaseModel):
@@ -66,8 +76,8 @@ class Issue(BaseModel):
 
 
 class Review(BaseModel):
-    issues: list[Issue] = Field(max_length=8)
-    rewrite: str = Field(max_length=1200)
+    issues: list[Issue] = Field(max_length=5)
+    rewrites: list[str] = Field(min_length=1, max_length=4)
 
 
 def pronoun(llm: LLM, marked: str) -> tuple[dict[str, Any], Completion]:
@@ -100,6 +110,6 @@ def review(
     hints = "\n".join(f"- {f.rule}: '{f.text}' ({f.message})" for f in findings or [])
     user = f"Requirement:\n{text}\n\nRule checker findings:\n{hints or '- none'}"
     msgs = [{"role": "system", "content": REVIEW_SYSTEM}, {"role": "user", "content": user}]
-    parsed, c = llm.parse(msgs, Review, max_tokens=600)
+    parsed, c = llm.parse(msgs, Review, max_tokens=900)
     out: dict[str, Any] = json.loads(parsed.model_dump_json())
     return out, c

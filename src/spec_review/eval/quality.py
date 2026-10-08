@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, roc_auc_score
 
 from spec_review.config import ROOT
 from spec_review.data import promise, reqeval
@@ -66,6 +67,25 @@ def _round(v: Any) -> Any:
     return v
 
 
+def _count(cands: Any) -> int:
+    return len({" ".join(str(x).lower().split()) for x in cands if str(x).strip()})
+
+
+def tuned_threshold(score: np.ndarray, y: np.ndarray, split: np.ndarray) -> dict[str, Any]:
+    """Pick "ambiguous if score >= t" on ReqEval's train split, report its test split."""
+    train, test = split == "train", split == "test"
+    best = max(
+        sorted(set(score[train].tolist())),
+        key=lambda t: cohen_kappa_score(y[train], score[train] >= t),
+    )
+    return {
+        "threshold_from_train": float(best),
+        "test_sentences": int(test.sum()),
+        "auc_all": float(roc_auc_score(y, score)),
+        "test": _scores(y[test], score[test] >= best),
+    }
+
+
 def pronoun_report(run: str) -> dict[str, Any]:
     gold = reqeval.load().set_index("id")
     df = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
@@ -78,11 +98,18 @@ def pronoun_report(run: str) -> dict[str, Any]:
         bool(_norm(a)) and (_norm(a) in _norm(p) or _norm(p) in _norm(a))
         for a, p in zip(g.antecedent[clear], ok.antecedent[clear], strict=True)
     ]
+    split = g.split.to_numpy()
+    nps = np.array([len(_NP.findall(m.split("<referential>", 1)[0])) for m in g.marked])
+    tuned: dict[str, Any] = {"noun_phrase_count": tuned_threshold(nps, y, split)}
+    if "candidates" in ok:
+        counts = np.array([_count(c) for c in ok.candidates])
+        tuned["llm_candidate_count"] = tuned_threshold(counts, y, split)
     return _write(
         run,
         {
             "run": run,
             "sentences": len(ok),
+            "thresholds_tuned_on_train": tuned,
             "errors": len(df) - len(ok),
             "base_rate_ambiguous": float(y.mean()),
             "llm": _scores(y, llm),
@@ -96,19 +123,39 @@ def pronoun_report(run: str) -> dict[str, Any]:
     )
 
 
+_NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def numbers_kept(original: str, rewrite: str) -> bool:
+    """Every number of the original survives the rewrite (a cheap guard against meaning drift)."""
+    return set(_NUMBER.findall(original)) <= set(_NUMBER.findall(rewrite))
+
+
+def rewrite_text(row: Mapping[Any, Any]) -> str:
+    rewrites = row.get("rewrites")
+    if isinstance(rewrites, list):
+        return " ".join(str(x) for x in rewrites)
+    return str(row.get("rewrite", ""))
+
+
 def review_report(run: str) -> dict[str, Any]:
     df = pd.read_json(run_dir(run) / "merged.jsonl", lines=True, dtype={"id": str})
     ok = df[df.get("error", pd.Series(index=df.index, dtype=object)).isna()]
     texts = promise.load().set_index("id").text
-    before, after, new_rules, unchanged, placeholders = [], [], 0, 0, 0
+    before, after, new_rules, unchanged, placeholders, kept, parts = [], [], 0, 0, 0, 0, []
     for r in ok.to_dict("records"):
-        b = {f.rule for f in rules.check(str(texts[r["id"]]))}
-        a = {f.rule for f in rules.check(str(r["rewrite"]))}
+        original = str(texts[r["id"]])
+        pieces = r["rewrites"] if isinstance(r.get("rewrites"), list) else [rewrite_text(r)]
+        b = {f.rule for f in rules.check(original)}
+        found = [f.rule for p in pieces for f in rules.check(str(p))]
+        a = set(found)
         before.append(len(b))
         after.append(len(a))
         new_rules += bool(a - b)
-        unchanged += _norm(str(r["rewrite"])) == _norm(str(texts[r["id"]]))
-        placeholders += "[value]" in str(r["rewrite"])
+        unchanged += _norm(rewrite_text(r)) == _norm(original)
+        placeholders += "[value]" in rewrite_text(r)
+        kept += numbers_kept(original, rewrite_text(r))
+        parts.append(len(pieces))
     b_arr, a_arr = np.array(before), np.array(after)
     flagged = b_arr > 0
     issue_types = pd.Series([i["type"] for issues in ok.issues for i in issues]).value_counts()
@@ -126,6 +173,8 @@ def review_report(run: str) -> dict[str, Any]:
             "rewrites_adding_a_new_rule": float(new_rules / max(1, len(ok))),
             "returned_unchanged": float(unchanged / max(1, len(ok))),
             "rewrites_with_value_placeholder": float(placeholders / max(1, len(ok))),
+            "numbers_kept": float(kept / max(1, len(ok))),
+            "requirements_per_rewrite": float(np.mean(parts)) if parts else None,
             "llm_issue_types": {str(k): int(v) for k, v in issue_types.items()},
             "llm_issues_per_requirement": float(ok.issues.map(len).mean()),
         },

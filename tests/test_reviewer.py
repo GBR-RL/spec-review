@@ -38,7 +38,7 @@ def test_review_passes_rule_findings_as_hints() -> None:
     seen: list[dict[str, Any]] = []
     reply = {
         "issues": [{"type": "vague", "quote": "quickly", "explanation": "Not measurable."}],
-        "rewrite": "The pump shall reach nominal speed within [value] s of power-up.",
+        "rewrites": ["The pump shall reach nominal speed within [value] s of power-up."],
     }
     text = "The pump should start quickly."
     out, _ = reviewer.review(_llm(reply, seen), text, rules.check(text))
@@ -72,3 +72,8 @@ def test_candidates_make_a_pronoun_ambiguous() -> None:
     out, _ = reviewer.pronoun_candidates(_llm(one, []), "x <referential>it</referential>")
     assert out["ambiguous"] is False
     assert out["antecedent"] == "the pump"
+
+
+def test_numbers_kept_guards_against_meaning_drift() -> None:
+    assert quality.numbers_kept("Respond within 2.5 s for 90% of users.", "Within 2.5 s, 90% ...")
+    assert not quality.numbers_kept("The top 1/4 of the table", "The table shall store events.")

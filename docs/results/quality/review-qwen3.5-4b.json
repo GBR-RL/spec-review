@@ -1,0 +1,26 @@
+{
+  "run": "review-qwen3.5-4b",
+  "requirements": 208,
+  "errors": 30,
+  "with_rule_findings_before": 0.524,
+  "with_rule_findings_after": 0.4135,
+  "rule_findings_before": 143,
+  "rule_findings_after": 110,
+  "flagged_now_clean": 0.4954,
+  "rewrites_adding_a_new_rule": 0.3221,
+  "returned_unchanged": 0.0048,
+  "rewrites_with_value_placeholder": 0.1394,
+  "numbers_kept": 0.8317,
+  "requirements_per_rewrite": 1.0,
+  "llm_issue_types": {
+    "ambiguous-reference": 605,
+    "vague": 121,
+    "weak-modal": 42,
+    "untestable": 25,
+    "open-ended": 19,
+    "multiple": 4,
+    "passive": 4,
+    "incomplete": 3
+  },
+  "llm_issues_per_requirement": 3.9567
+}

@@ -16,14 +16,17 @@ on:
         default: qwen3.5-4b
       shards:
         description: Parallel runners
-        default: "4"
+        default: "8"
+      label:
+        description: Optional suffix for the run name (e.g. a prompt version)
+        default: ""
 
 permissions:
   contents: read
 
 env:
   LLAMA_CPP: b11327
-  RUN: ${{ inputs.task }}-${{ inputs.model }}
+  RUN: ${{ inputs.task }}${{ inputs.label && format('-{0}', inputs.label) || '' }}-${{ inputs.model }}
 
 jobs:
   plan:
