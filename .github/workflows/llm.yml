@@ -8,7 +8,7 @@ on:
     inputs:
       task:
         type: choice
-        options: [pronoun, review]
+        options: [pronoun, review, classify]
         default: pronoun
       model:
         type: choice

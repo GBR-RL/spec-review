@@ -1,0 +1,75 @@
+name: LoRA fine-tune
+
+# Fine-tunes Qwen3-0.6B with LoRA as a 12-class requirement classifier, one CPU runner per
+# fold of the cross-validation over projects, then scores the pooled out-of-fold predictions.
+on:
+  workflow_dispatch:
+    inputs:
+      epochs:
+        default: "3"
+
+permissions:
+  contents: read
+
+jobs:
+  fold:
+    name: Fold ${{ matrix.fold }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        fold: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: |
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e ".[lora]"
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-data-v1-${{ hashFiles('src/spec_review/data/download.py') }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-qwen3-0.6b-v1
+      - run: spec-review data
+      - run: spec-review lora-train --fold ${{ matrix.fold }} --epochs ${{ inputs.epochs }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lora-fold-${{ matrix.fold }}
+          path: runs/lora/
+          retention-days: 7
+
+  score:
+    needs: fold
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e .
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-data-v1-${{ hashFiles('src/spec_review/data/download.py') }}
+      - run: spec-review data
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: lora-fold-*
+          path: runs/lora
+          merge-multiple: true
+      - run: spec-review classify-score --method lora_qwen3-0.6b --lora-dir runs/lora | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lora-results
+          path: |
+            docs/results/classification/
+            runs/lora/
+          retention-days: 30
