@@ -98,3 +98,24 @@ def review_run(llm: LLM, name: str, index: int = 0, count: int = 1, split: str =
 
     path = run_dir(name) / f"shard{index}of{count}.jsonl"
     return loop(((r["id"], r) for r in df.to_dict("records")), fn, path, index, count)
+
+
+def classify_run(llm: LLM, name: str, index: int = 0, count: int = 1) -> Path:
+    """Few-shot classification of every PROMISE requirement (12 classes), fold-aware examples."""
+    from spec_review.classify import cv
+    from spec_review.classify import llm as fewshot
+
+    data, y, fold_of = cv.task_data("all-12")
+    shots = fewshot.examples_for(data, fold_of)
+    labels = y.tolist()
+    texts = data.text.tolist()
+
+    def fn(row: dict[str, Any]) -> dict[str, Any]:
+        i = row["i"]
+        examples = [(texts[j], labels[j]) for j in shots[i]]
+        label, c = fewshot.classify(llm, texts[i], examples)
+        return {"pred": label, **_usage(c)}
+
+    rows = ((rid, {"i": i}) for i, rid in enumerate(data.id))
+    path = run_dir(name) / f"shard{index}of{count}.jsonl"
+    return loop(rows, fn, path, index, count)
