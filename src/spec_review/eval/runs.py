@@ -122,3 +122,34 @@ def classify_run(llm: LLM, name: str, index: int = 0, count: int = 1) -> Path:
     rows = ((rid, {"i": i}) for i, rid in enumerate(data.id))
     path = run_dir(name) / f"shard{index}of{count}.jsonl"
     return loop(rows, fn, path, index, count)
+
+
+def verify_run(llm: LLM, name: str, index: int = 0, count: int = 1, method: str = "hybrid") -> Path:
+    """LLM verdicts for the top-k recovered candidates of every source of every pair."""
+    from spec_review.config import RUNS as RUNS_ROOT
+    from spec_review.data import coest
+    from spec_review.trace import recover, verify
+
+    rankings = json.loads((RUNS_ROOT / "trace" / f"{method}_rankings.json").read_text())
+    arts, _ = coest.load()
+    text = {(d, i): t for d, i, t in zip(arts.dataset, arts.id, arts.text, strict=True)}
+    items = []
+    for pair in recover.PAIRS:
+        for source, ranked in rankings.get(pair.name, {}).items():
+            for target in ranked[: verify.TOP_K]:
+                key = f"{pair.name}|{source}|{target}"
+                items.append((key, (pair, source, target)))
+
+    def fn(item: tuple[Any, str, str]) -> dict[str, Any]:
+        pair, source, target = item
+        out, c = verify.verify(
+            llm,
+            text[(pair.dataset, source)],
+            pair.source_kind,
+            text[(pair.dataset, target)],
+            pair.target_kind,
+        )
+        return {**out, **_usage(c)}
+
+    path = run_dir(name) / f"shard{index}of{count}.jsonl"
+    return loop(items, fn, path, index, count)
