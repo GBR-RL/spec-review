@@ -1,0 +1,35 @@
+{
+  "task": "all-12",
+  "method": "lora_qwen3-0.6b",
+  "folds": "grouped by project",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.6074,
+  "macro_f1_ci": [
+    0.5593,
+    0.6485
+  ],
+  "weighted_f1": 0.725,
+  "accuracy": 0.7224,
+  "macro_f1_per_fold": [
+    0.558,
+    0.5987,
+    0.6668,
+    0.601,
+    0.5558
+  ],
+  "f1_per_class": {
+    "A": 0.6875,
+    "F": 0.8481,
+    "FT": 0.4103,
+    "L": 0.5625,
+    "LF": 0.4444,
+    "MN": 0.45,
+    "O": 0.5537,
+    "PE": 0.6613,
+    "PO": 0.6207,
+    "SC": 0.6977,
+    "SE": 0.7883,
+    "US": 0.565
+  }
+}

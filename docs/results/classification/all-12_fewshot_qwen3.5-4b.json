@@ -1,0 +1,35 @@
+{
+  "task": "all-12",
+  "method": "fewshot_qwen3.5-4b",
+  "folds": "grouped by project",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.6908,
+  "macro_f1_ci": [
+    0.641,
+    0.7289
+  ],
+  "weighted_f1": 0.802,
+  "accuracy": 0.7998,
+  "macro_f1_per_fold": [
+    0.7277,
+    0.6361,
+    0.7457,
+    0.6904,
+    0.6277
+  ],
+  "f1_per_class": {
+    "A": 0.7714,
+    "F": 0.8927,
+    "FT": 0.6364,
+    "L": 0.6875,
+    "LF": 0.614,
+    "MN": 0.5581,
+    "O": 0.6623,
+    "PE": 0.8,
+    "PO": 0.4706,
+    "SC": 0.6316,
+    "SE": 0.8606,
+    "US": 0.7042
+  }
+}

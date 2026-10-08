@@ -1,0 +1,25 @@
+{
+  "task": "fr-nfr",
+  "method": "fewshot_qwen3.5-4b",
+  "folds": "grouped by project",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.9021,
+  "macro_f1_ci": [
+    0.8822,
+    0.9204
+  ],
+  "weighted_f1": 0.9029,
+  "accuracy": 0.903,
+  "macro_f1_per_fold": [
+    0.853,
+    0.9261,
+    0.884,
+    0.9429,
+    0.9208
+  ],
+  "f1_per_class": {
+    "F": 0.8927,
+    "NFR": 0.9115
+  }
+}
