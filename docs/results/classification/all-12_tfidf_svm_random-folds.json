@@ -1,0 +1,35 @@
+{
+  "task": "all-12",
+  "method": "tfidf_svm_random-folds",
+  "folds": "random (projects shared)",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.6339,
+  "macro_f1_ci": [
+    0.5875,
+    0.6721
+  ],
+  "weighted_f1": 0.7714,
+  "accuracy": 0.7761,
+  "macro_f1_per_fold": [
+    0.5461,
+    0.6123,
+    0.6069,
+    0.7256,
+    0.6283
+  ],
+  "f1_per_class": {
+    "A": 0.7869,
+    "F": 0.8884,
+    "FT": 0.4667,
+    "L": 0.8,
+    "LF": 0.6737,
+    "MN": 0.4255,
+    "O": 0.6443,
+    "PE": 0.7846,
+    "PO": 0.1176,
+    "SC": 0.6364,
+    "SE": 0.7472,
+    "US": 0.6353
+  }
+}

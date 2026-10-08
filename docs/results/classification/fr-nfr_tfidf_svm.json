@@ -1,0 +1,25 @@
+{
+  "task": "fr-nfr",
+  "method": "tfidf_svm",
+  "folds": "grouped by project",
+  "requirements": 969,
+  "projects": 47,
+  "macro_f1": 0.7137,
+  "macro_f1_ci": [
+    0.6861,
+    0.7428
+  ],
+  "weighted_f1": 0.7195,
+  "accuracy": 0.7307,
+  "macro_f1_per_fold": [
+    0.5952,
+    0.8574,
+    0.7241,
+    0.6459,
+    0.7392
+  ],
+  "f1_per_class": {
+    "F": 0.6439,
+    "NFR": 0.7834
+  }
+}
