@@ -62,7 +62,7 @@ authors listed in each dataset's readme). Source code artifacts are reduced to t
 | dataset | links | density |
 |---|---:|---:|
 | CM1 | 45 | 0.60 per artifact |
-| EasyClinic | 360 | 2.25 per artifact |
+| EasyClinic | 1,618 | 10.11 per artifact |
 | eTOUR | 308 | 1.77 per artifact |
 | iTrust | 399 | 0.80 per artifact |
 
