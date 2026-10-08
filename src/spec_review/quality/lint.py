@@ -44,8 +44,27 @@ def parse(text: str) -> list[Requirement]:
     return reqs
 
 
+def parse_reqif(path: Path) -> list[Requirement]:
+    """Requirements from a ReqIF file; the line is where the SPEC-OBJECT starts."""
+    from spec_review import reqif
+
+    source = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    reqs = []
+    for obj in reqif.read(path):
+        line = next(
+            (n for n, text in enumerate(source, 1) if f'IDENTIFIER="{obj.identifier}"' in text), 1
+        )
+        reqs.append(Requirement(obj.id, obj.text, line, 1))
+    return reqs
+
+
 def lint(path: Path) -> list[Requirement]:
-    reqs = parse(path.read_text(encoding="utf-8"))
+    from spec_review import reqif
+
+    if reqif.looks_like_reqif(path):
+        reqs = parse_reqif(path)
+    else:
+        reqs = parse(path.read_text(encoding="utf-8"))
     for r in reqs:
         r.findings = check(r.text)
     return reqs
