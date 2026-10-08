@@ -1,0 +1,34 @@
+{
+  "method": "tfidf",
+  "hops": 3,
+  "by_k": {
+    "1": {
+      "starts": 30,
+      "precision": 0.4616666666666666,
+      "recall": 0.41326062826062826,
+      "mean_true_impact": 6.6,
+      "mean_predicted_impact": 4.566666666666666
+    },
+    "2": {
+      "starts": 30,
+      "precision": 0.370033855033855,
+      "recall": 0.6789588189588188,
+      "mean_true_impact": 6.6,
+      "mean_predicted_impact": 10.3
+    },
+    "3": {
+      "starts": 30,
+      "precision": 0.2831422169734863,
+      "recall": 0.7920204795204795,
+      "mean_true_impact": 6.6,
+      "mean_predicted_impact": 16.033333333333335
+    },
+    "5": {
+      "starts": 30,
+      "precision": 0.18848153409148097,
+      "recall": 0.9006987456987456,
+      "mean_true_impact": 6.6,
+      "mean_predicted_impact": 28.766666666666666
+    }
+  }
+}
