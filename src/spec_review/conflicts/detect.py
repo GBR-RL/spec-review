@@ -42,8 +42,10 @@ def embedding_similarity(model_name: str = "BAAI/bge-m3") -> Scorer:
     def score(pairs: pd.DataFrame) -> NDArray[np.float64]:
         from sentence_transformers import SentenceTransformer
 
+        from spec_review.device import pick_device
+
         texts = sorted(set(pairs.a) | set(pairs.b))
-        model = SentenceTransformer(model_name, device="cpu")
+        model = SentenceTransformer(model_name, device=pick_device())
         vectors = model.encode(texts, normalize_embeddings=True)
         index = {t: i for i, t in enumerate(texts)}
         va = vectors[[index[t] for t in pairs.a]]
@@ -59,7 +61,9 @@ def nli_contradiction(model_name: str = NLI_MODEL) -> Scorer:
     def score(pairs: pd.DataFrame) -> NDArray[np.float64]:
         from sentence_transformers import CrossEncoder
 
-        model = CrossEncoder(model_name, device="cpu")
+        from spec_review.device import pick_device
+
+        model = CrossEncoder(model_name, device=pick_device())
         labels = [model.config.id2label[i].lower() for i in range(len(model.config.id2label))]
         c = labels.index("contradiction")
         forward = model.predict(list(zip(pairs.a, pairs.b, strict=True)), batch_size=64,

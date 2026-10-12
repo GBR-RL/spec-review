@@ -175,7 +175,9 @@ def _cached_model(hf_name: str) -> Any:
     if hf_name not in _MODELS:
         from sentence_transformers import SentenceTransformer
 
-        model = SentenceTransformer(hf_name, device="cpu")
+        from spec_review.device import pick_device
+
+        model = SentenceTransformer(hf_name, device=pick_device())
         model.max_seq_length = 512
         _MODELS[hf_name] = model
     return _MODELS[hf_name]
