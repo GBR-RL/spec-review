@@ -14,8 +14,11 @@ Requirements as code: a reviewer for engineering requirements that runs on every
 - **Conflicts.** It ranks requirement pairs by how likely they are to contradict each other.
 - **ReqIF.** It reads and writes ReqIF, the exchange format of DOORS, Polarion and Jama.
 
-Everything runs on a CPU. The LLMs are open-weight models (Qwen3.5-4B, Granite 4.2 3B) served
-locally by llama.cpp, with no hosted APIs. Every component is measured on a public benchmark, and
+The LLMs are open-weight models (Qwen3.5-4B, Granite 4.2 3B) behind any OpenAI-compatible
+server, with no hosted APIs, so requirements never leave the company: llama.cpp on a GPU or a CPU,
+or vLLM on a GPU. The embedding, NLI and LoRA models pick a GPU automatically when there is one.
+Every number below was measured on 4-core CPU runners, the slowest setting, so a GPU only shortens
+the run times. Every component is measured on a public benchmark, and
 the evaluation is built so that the numbers are not flattered: splits are grouped by project,
 confidence intervals are reported, and each LLM is compared with a cheap baseline.
 
