@@ -39,8 +39,11 @@ def train_fold(
     from peft import LoraConfig, TaskType, get_peft_model
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+    from spec_review.device import pick_device
+
     torch.manual_seed(SEED)
     rng = np.random.default_rng(SEED)
+    device = pick_device()
     data, y, fold_of = cv.task_data("all-12")
     train, test = np.where(fold_of != fold)[0], np.where(fold_of == fold)[0]
     label_id = {lab: i for i, lab in enumerate(LABELS)}
@@ -64,13 +67,13 @@ def train_fold(
         lora_dropout=0.05,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     )
-    model = get_peft_model(model, config)
+    model = get_peft_model(model, config).to(device)
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total = sum(p.numel() for p in model.parameters())
 
     counts = np.bincount(y_ids[train], minlength=len(LABELS)).astype(float)
     weights = torch.tensor(
-        counts.sum() / (len(LABELS) * np.maximum(counts, 1)), dtype=torch.float32
+        counts.sum() / (len(LABELS) * np.maximum(counts, 1)), dtype=torch.float32, device=device
     )
     loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=lr)
@@ -80,7 +83,7 @@ def train_fold(
 
     def batch(idx: np.ndarray) -> Any:
         return tok([texts[i] for i in idx], padding=True, truncation=True,
-                   max_length=max_length, return_tensors="pt")  # fmt: skip
+                   max_length=max_length, return_tensors="pt").to(device)  # fmt: skip
 
     t0 = time.perf_counter()
     model.train()
@@ -91,7 +94,7 @@ def train_fold(
             idx = order[start : start + batch_size]
             enc = batch(idx)
             logits = model(**enc).logits
-            loss = loss_fn(logits, torch.tensor(y_ids[idx]))
+            loss = loss_fn(logits, torch.tensor(y_ids[idx], device=device))
             opt.zero_grad()
             loss.backward()
             opt.step()
